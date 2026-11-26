@@ -194,54 +194,24 @@ export default function DashboardMifus() {
                     <div className="mifus-progress" aria-label={`Sisa cairan ${device.percentage}%`}><span style={{ width: `${Math.max(0, Math.min(100, device.percentage))}%` }} /></div>
                     <dl>
                       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
-
-                        <div className="flex justify-between items-start pb-4 border-b border-slate-100">
-                          <div>
-                            <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700">
-                              Bed {device.bed_number} ({device.room_number})
-                            </span>
-                            <h3 className="text-lg font-bold text-slate-900 mt-2">{device.patient_name || 'Pasien Belum Ditugaskan'}</h3>
-                            <p className="text-xs text-slate-400 font-medium">{device.diagnosis || 'Diagnosis belum diisi'}</p>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                            device.status === 'critical' ? 'bg-rose-100 text-rose-700 animate-pulse' :
-                            device.status === 'warning' ? 'bg-amber-100 text-amber-700' :
-                            'bg-emerald-100 text-emerald-700'
-                          }`}>
-                            {device.status}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 items-center gap-4 py-4">
-                          <InfusionBottle
-                            percentage={device.percentage}
-                            volume={device.current_volume}
-                            totalCapacity={500}
-                            flowRate={device.flow_rate}
-                            status={device.status}
-                            imageSrc="/infus_tabung.png"
-                          />
-
-                          <div className="space-y-3">
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                              <p className="text-[11px] font-semibold text-slate-400 uppercase">Sisa Cairan</p>
-                              <p className="text-xl font-black text-slate-800">{device.current_volume} <span className="text-xs font-normal text-slate-500">mL</span></p>
-                            </div>
-
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                              <p className="text-[11px] font-semibold text-slate-400 uppercase">Laju Alir</p>
-                              <p className="text-xl font-black text-slate-800">{device.flow_rate} <span className="text-xs font-normal text-slate-500">mL/dtk</span></p>
-                            </div>
-
-                            <div className="bg-blue-50/60 p-3 rounded-2xl border border-blue-100">
-                              <p className="text-[11px] font-semibold text-blue-600 uppercase">Estimasi Habis</p>
-                              <p className="text-sm font-bold text-blue-900">
-                                {calculateTimeToEmpty(device.current_volume, device.flow_rate)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                        <InfusionBottle
+                          percentage={device.percentage}
+                          volume={device.current_volume}
+                          totalCapacity={500}
+                          flowRate={device.flow_rate}
+                          status={device.status}
+                          imageSrc="/infus_tabung.png"
+                        />
                       </div>
+                      <img
+                        src='/infus_selang.png'
+                        alt="Visualisasi Selang Infus"
+                        className="relative z-10 w-full h-full object-contain pointer-events-none drop-shadow-sm"
+                        onError={(e) => {
+                          // Fallback elegan jika gambar belum disalin ke folder public
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                       <div><dt>Sisa cairan</dt><dd>{device.current_volume} mL ({device.percentage}%)</dd></div>
                       <div><dt>Flow rate</dt><dd>{device.flow_rate} mL/s</dd></div>
                       <div><dt>Baterai</dt><dd>{device.battery_level}%</dd></div>
