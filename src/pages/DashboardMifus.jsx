@@ -213,12 +213,13 @@ export default function DashboardMifus() {
                         </div>
 
                         <div className="grid grid-cols-2 items-center gap-4 py-4">
-
-                          <InfusionBottle 
-                            percentage={device.percentage} 
-                            volume={device.current_volume} 
-                            flowRate={device.flow_rate} 
-                            status={device.status} 
+                          <InfusionBottle
+                            percentage={device.percentage}
+                            volume={device.current_volume}
+                            totalCapacity={500}
+                            flowRate={device.flow_rate}
+                            status={device.status}
+                            imageSrc="/infus_tabung.png"
                           />
 
                           <div className="space-y-3">
