@@ -3,6 +3,7 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import InfusionBottle from '../components/InfusionBottle';
 import FlowRateWidget from '../components/FlowRateWidget';
+import DeviceStatusCard from '../components/DeviceStatusCard';
 
 const STATUS_LABEL = { normal: 'Normal', warning: 'Perhatian', critical: 'Kritis', offline: 'Offline' };
 
@@ -194,6 +195,7 @@ export default function DashboardMifus() {
                     <p className="mifus-location">{device.hospital_name || 'Rumah sakit'} · {device.room_number || '-'} / {device.bed_number || '-'}</p>
                     <div className="mifus-progress" aria-label={`Sisa cairan ${device.percentage}%`}><span style={{ width: `${Math.max(0, Math.min(100, device.percentage))}%` }} /></div>
                     <dl>
+                      <DeviceStatusCard device={device} />
                       <InfusionBottle
                         percentage={device.percentage}
                         volume={device.current_volume}
