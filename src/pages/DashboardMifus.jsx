@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import InfusionBottle from '../components/InfusionBottle';
 
 const STATUS_LABEL = { normal: 'Normal', warning: 'Perhatian', critical: 'Kritis', offline: 'Offline' };
 
@@ -192,9 +193,8 @@ export default function DashboardMifus() {
                     <p className="mifus-location">{device.hospital_name || 'Rumah sakit'} · {device.room_number || '-'} / {device.bed_number || '-'}</p>
                     <div className="mifus-progress" aria-label={`Sisa cairan ${device.percentage}%`}><span style={{ width: `${Math.max(0, Math.min(100, device.percentage))}%` }} /></div>
                     <dl>
-                      {/* Card Ranap / Pasien */}
                       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
-                        {/* Header Info */}
+
                         <div className="flex justify-between items-start pb-4 border-b border-slate-100">
                           <div>
                             <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700">
@@ -212,9 +212,8 @@ export default function DashboardMifus() {
                           </span>
                         </div>
 
-                        {/* Body: Ilustrasi Botol + Metrik Klinis Lengkap */}
                         <div className="grid grid-cols-2 items-center gap-4 py-4">
-                          {/* Ilustrasi Botol Infus */}
+
                           <InfusionBottle 
                             percentage={device.percentage} 
                             volume={device.current_volume} 
@@ -222,7 +221,6 @@ export default function DashboardMifus() {
                             status={device.status} 
                           />
 
-                          {/* Detail Angka & Waktu Habis */}
                           <div className="space-y-3">
                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                               <p className="text-[11px] font-semibold text-slate-400 uppercase">Sisa Cairan</p>
