@@ -18,9 +18,9 @@ export default async function handler(req, res) {
       scope += ' AND d.hospital_id = $1';
       const result = await query(`
         SELECT a.*, d.room_number, d.bed_number, p.name AS patient_name
-        FROM alarm_events a
-        LEFT JOIN devices d ON d.id = a.device_id
-        LEFT JOIN patients p ON p.device_id = a.device_id
+        FROM mifus_alarm_events a
+        LEFT JOIN mifus_devices d ON d.id = a.device_id
+        LEFT JOIN mifus_patients p ON p.device_id = a.device_id
         ${scope}
         ORDER BY a.triggered_at DESC
         LIMIT 50
@@ -37,15 +37,15 @@ export default async function handler(req, res) {
 
     const alarm = await query(`
       SELECT a.id, d.hospital_id
-      FROM alarm_events a
-      JOIN devices d ON d.id = a.device_id
+      FROM mifus_alarm_events a
+      JOIN mifus_devices d ON d.id = a.device_id
       WHERE a.id = $1
     `, [alarmId]);
     if (alarm.rows.length === 0) return res.status(404).json({ error: 'Alarm tidak ditemukan' });
 
     assertHospitalScope(user, alarm.rows[0].hospital_id);
     const updated = await query(`
-      UPDATE alarm_events
+      UPDATE mifus_alarm_events
       SET is_resolved = true, resolved_at = NOW()
       WHERE id = $1 AND is_resolved = false
       RETURNING *

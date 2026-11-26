@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     const selectedDevice = device_id?.trim() || null;
     if (selectedDevice) {
       const device = await query(
-        'SELECT id FROM devices WHERE id = $1 AND hospital_id = $2 AND is_active = true',
+        'SELECT id FROM mifus_devices WHERE id = $1 AND hospital_id = $2 AND is_active = true',
         [selectedDevice, user.hospital_id]
       );
       if (device.rowCount === 0) {
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     }
 
     const result = await query(
-      `INSERT INTO patients
+      `INSERT INTO mifus_patients
         (name, medical_record_number, diagnosis, hospital_id, device_id, total_volume_prescribed)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, name, medical_record_number, diagnosis, hospital_id, device_id, total_volume_prescribed`,

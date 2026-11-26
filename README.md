@@ -27,15 +27,18 @@ Repositori ini berisi aplikasi dashboard klinis **Mifus-App** untuk memantau sis
 ### Menjalankan secara lokal
 
 1. Install dependency dengan `npm install`.
-2. Salin `.env.example` menjadi `.env.local`, lalu isi `POSTGRES_URL`,
+2. Salin `.env.example` menjadi `.env.development.local`, lalu isi `POSTGRES_URL`,
    `JWT_SECRET`, dan `IOT_INGEST_TOKEN` dengan nilai rahasia yang kuat
    (contoh generator: `openssl rand -base64 32`).
-3. Jalankan SQL pada `scripts/schema.sql` di database PostgreSQL.
+3. Jalankan SQL pada `scripts/schema.sql` di database PostgreSQL. Semua tabel
+   MIFUS memakai awalan `mifus_`, sehingga aman berdampingan dengan tabel SIMDES
+   dalam database yang sama. Jangan mengganti atau menghapus tabel `users` milik SIMDES.
 4. Untuk bootstrap pertama, isi `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
    (minimal 12 karakter), `HOSPITAL_NAME`, dan `HOSPITAL_ADDRESS`, lalu jalankan
    `node scripts/seed-admin.js`. Script ini membuat satu rumah sakit dan akun
    manager dalam satu transaksi.
-5. Jalankan `npx vercel dev` untuk menguji frontend dan API Vercel bersama-sama.
+5. Jalankan `node test-db.mjs` untuk memeriksa koneksi dan skema MIFUS, lalu
+   `npx vercel dev` untuk menguji frontend dan API Vercel bersama-sama.
    `npm run dev` hanya menjalankan frontend Vite.
 
 Gunakan token `IOT_INGEST_TOKEN` yang sama pada perangkat IoT dan server, dan
@@ -66,74 +69,11 @@ status terakhir perangkat dan membuka alarm saat nilai melewati ambang deteksi.
 
 ## 🗄️ 3. Database Schema Reference (PostgreSQL / Neon)
 
-Saat membuat *query* atau migrasi, selalu patuhi skema tabel berikut:
-
-```sql
--- 1. Rumah Sakit
-CREATE TABLE hospitals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(150) NOT NULL,
-    address TEXT NOT NULL,
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2. Pengguna (Manager, Nurse, Patient)
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('manager', 'nurse', 'patient')) DEFAULT 'nurse',
-    hospital_id UUID REFERENCES hospitals(id) ON DELETE SET NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-CREATE UNIQUE INDEX users_email_case_insensitive_unique ON users (LOWER(email));
-
--- 3. Perangkat IoT Mifus
-CREATE TABLE devices (
-    id VARCHAR(50) PRIMARY KEY, -- Contoh ID hardware: 'MF001', 'MF002'
-    hospital_id UUID REFERENCES hospitals(id) ON DELETE SET NULL,
-    room_number VARCHAR(50),
-    bed_number VARCHAR(50),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 4. Pasien
-CREATE TABLE patients (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    medical_record_number VARCHAR(50) UNIQUE NOT NULL,
-    diagnosis TEXT,
-    hospital_id UUID REFERENCES hospitals(id) ON DELETE CASCADE,
-    device_id VARCHAR(50) UNIQUE REFERENCES devices(id) ON DELETE SET NULL,
-    total_volume_prescribed INT DEFAULT 500, -- dalam mL
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 5. Telemetri Realtime Terakhir (State Cache)
-CREATE TABLE device_telemetry (
-    device_id VARCHAR(50) PRIMARY KEY REFERENCES devices(id) ON DELETE CASCADE,
-    current_volume INT NOT NULL,         -- sisa mL
-    flow_rate DOUBLE PRECISION NOT NULL, -- mL/s
-    percentage INT NOT NULL,             -- 0 - 100%
-    battery_level INT DEFAULT 100,
-    status VARCHAR(20) DEFAULT 'normal', -- 'normal' | 'warning' | 'critical'
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 6. Riwayat Kejadian Alarm (Event Logs)
-CREATE TABLE alarm_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    device_id VARCHAR(50) REFERENCES devices(id) ON DELETE CASCADE,
-    alarm_type VARCHAR(50) NOT NULL,     -- 'OCCLUSION' | 'EMPTY_BAG' | 'LOW_BATTERY'
-    message TEXT NOT NULL,
-    is_resolved BOOLEAN DEFAULT false,
-    triggered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP WITH TIME ZONE
-);
+Jalankan `scripts/schema.sql` untuk membuat tabel MIFUS berikut:
+`mifus_hospitals`, `mifus_users`, `mifus_devices`, `mifus_patients`,
+`mifus_device_telemetry`, dan `mifus_alarm_events`. Migrasi bersifat aditif
+(`CREATE TABLE IF NOT EXISTS`) dan tidak mengubah tabel SIMDES. Akun untuk login
+MIFUS disimpan di `mifus_users`; akun SIMDES di `users` tetap terpisah.
 
 Saat mengenerate kode komponen atau halaman baru:
 Clinical Clarity & Contrast: Utamakan keterbacaan tinggi. Jangan gunakan neumorphism buram. Gunakan border tipis (border-slate-200) dan background putih bersih (bg-white).

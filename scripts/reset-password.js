@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.development.local' });
 
 const email = process.env.RESET_EMAIL;
 const password = process.env.RESET_PASSWORD;
@@ -12,8 +12,8 @@ if (!email || !password) {
   process.exit(1);
 }
 
-if (password.length < 8) {
-  console.error('Password minimal 8 karakter.');
+if (password.length < 12) {
+  console.error('Password minimal 12 karakter.');
   process.exit(1);
 }
 
@@ -27,7 +27,7 @@ const pool = new Pool({
 try {
   const passwordHash = await bcrypt.hash(password, 10);
   const result = await pool.query(
-    'UPDATE users SET password_hash = $1 WHERE email = $2 RETURNING email',
+    'UPDATE mifus_users SET password_hash = $1 WHERE email = $2 RETURNING email',
     [passwordHash, email]
   );
 

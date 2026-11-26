@@ -32,10 +32,10 @@ export default async function handler(req, res) {
         COALESCE(t.battery_level, 100) AS battery_level,
         CASE WHEN d.is_active THEN COALESCE(t.status, 'offline') ELSE 'offline' END AS status,
         t.updated_at
-      FROM devices d
-      LEFT JOIN hospitals h ON h.id = d.hospital_id
-      LEFT JOIN patients p ON p.device_id = d.id
-      LEFT JOIN device_telemetry t ON t.device_id = d.id
+      FROM mifus_devices d
+      LEFT JOIN mifus_hospitals h ON h.id = d.hospital_id
+      LEFT JOIN mifus_patients p ON p.device_id = d.id
+      LEFT JOIN mifus_device_telemetry t ON t.device_id = d.id
       WHERE d.hospital_id = $1
       ORDER BY
         CASE
@@ -59,9 +59,9 @@ export default async function handler(req, res) {
         d.room_number,
         d.bed_number,
         p.name AS patient_name
-      FROM alarm_events a
-      LEFT JOIN devices d ON d.id = a.device_id
-      LEFT JOIN patients p ON p.device_id = a.device_id
+      FROM mifus_alarm_events a
+      LEFT JOIN mifus_devices d ON d.id = a.device_id
+      LEFT JOIN mifus_patients p ON p.device_id = a.device_id
       WHERE a.is_resolved = false AND d.hospital_id = $1
       ORDER BY a.triggered_at DESC
       LIMIT 20

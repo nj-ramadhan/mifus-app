@@ -30,9 +30,9 @@ export default function LoginPage() {
     <main className="mifus-login">
       <section className="mifus-login-card" aria-label="Login MIFUS">
         <div className="mifus-login-brand">
-          <span className="mifus-mark" aria-hidden="true">M</span>
+          <img className="mifus-login-logo" src="/icon-mifus.png" alt="MIFUS" />
           <div>
-            <h1>MIFUS Cloud</h1>
+            <h1>Portal MIFUS</h1>
             <p>Smart Infusion Monitoring</p>
           </div>
         </div>

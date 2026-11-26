@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Nilai telemetri berada di luar rentang yang valid' });
     }
 
-    const device = await query('SELECT id, is_active FROM devices WHERE id = $1', [deviceId.trim()]);
+    const device = await query('SELECT id, is_active FROM mifus_devices WHERE id = $1', [deviceId.trim()]);
     if (device.rows.length === 0) return res.status(404).json({ error: 'Perangkat IoT tidak ditemukan' });
     if (device.rows[0].is_active === false) return res.status(409).json({ error: 'Perangkat IoT tidak aktif' });
 
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
     }
 
     await query(`
-      INSERT INTO device_telemetry
+      INSERT INTO mifus_device_telemetry
         (device_id, current_volume, flow_rate, percentage, battery_level, status, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
       ON CONFLICT (device_id)
@@ -109,14 +109,14 @@ export default async function handler(req, res) {
 
     if (alarmType) {
       const existing = await query(`
-        SELECT id FROM alarm_events
+        SELECT id FROM mifus_alarm_events
         WHERE device_id = $1 AND alarm_type = $2 AND is_resolved = false
         LIMIT 1
       `, [deviceId.trim(), alarmType]);
 
       if (existing.rows.length === 0) {
         await query(`
-          INSERT INTO alarm_events (device_id, alarm_type, message)
+          INSERT INTO mifus_alarm_events (device_id, alarm_type, message)
           VALUES ($1, $2, $3)
         `, [deviceId.trim(), alarmType, alarmMessage]);
       }

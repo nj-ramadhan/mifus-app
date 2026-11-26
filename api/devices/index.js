@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     }
 
     const result = await query(
-      `INSERT INTO devices (id, hospital_id, room_number, bed_number)
+      `INSERT INTO mifus_devices (id, hospital_id, room_number, bed_number)
        VALUES ($1, $2, $3, $4)
        RETURNING id, hospital_id, room_number, bed_number, is_active`,
       [id.trim(), user.hospital_id, room_number?.trim() || null, bed_number?.trim() || null]

@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await query(
-      'SELECT id, name, email, password_hash, role, hospital_id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      'SELECT id, name, email, password_hash, role, hospital_id FROM mifus_users WHERE LOWER(email) = LOWER($1) LIMIT 1',
       [email.trim()]
     );
     if (result.rows.length === 0) return res.status(401).json({ error: 'Email atau password salah' });

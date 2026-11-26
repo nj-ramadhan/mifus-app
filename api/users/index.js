@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const result = await query(
-      `INSERT INTO users (name, email, password_hash, role, hospital_id)
+      `INSERT INTO mifus_users (name, email, password_hash, role, hospital_id)
        VALUES ($1, $2, $3, 'nurse', $4)
        RETURNING id, name, email, role, hospital_id`,
       [name.trim(), email.trim().toLowerCase(), passwordHash, user.hospital_id]

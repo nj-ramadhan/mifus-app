@@ -10,8 +10,8 @@ export default function Sidebar({ open, onToggle }) {
     <aside className="mifus-sidebar" aria-hidden={!open}>
       <button type="button" className="sidebar-close" onClick={onToggle} aria-label="Tutup navigasi">×</button>
       <div className="mifus-brand">
-        <span className="mifus-mark">M</span>
-        <div><strong>MIFUS</strong><small>Infusion Monitor</small></div>
+        <img className="mifus-brand-logo" src="/icon-mifus.png" alt="MIFUS" />
+        <div><small>Infusion Monitor</small></div>
       </div>
       <nav className="mifus-nav" aria-label="Navigasi utama">
         <NavLink to="/dashboard" end className={({ isActive }) => `mifus-nav-link ${isActive ? 'active' : ''}`}>

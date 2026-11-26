@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.development.local' });
 
 const {
   POSTGRES_URL,
@@ -47,7 +47,7 @@ async function main() {
     await client.query('BEGIN');
 
     const existingUser = await client.query(
-      'SELECT 1 FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      'SELECT 1 FROM mifus_users WHERE LOWER(email) = LOWER($1) LIMIT 1',
       [ADMIN_EMAIL.trim()]
     );
     if (existingUser.rowCount > 0) {
@@ -55,13 +55,13 @@ async function main() {
     }
 
     const hospital = await client.query(
-      'INSERT INTO hospitals (name, address) VALUES ($1, $2) RETURNING id',
+      'INSERT INTO mifus_hospitals (name, address) VALUES ($1, $2) RETURNING id',
       [HOSPITAL_NAME.trim(), HOSPITAL_ADDRESS.trim()]
     );
     const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
 
     await client.query(
-      `INSERT INTO users (name, email, password_hash, role, hospital_id)
+      `INSERT INTO mifus_users (name, email, password_hash, role, hospital_id)
        VALUES ($1, $2, $3, 'manager', $4)`,
       [ADMIN_NAME.trim(), ADMIN_EMAIL.trim().toLowerCase(), passwordHash, hospital.rows[0].id]
     );
