@@ -7,8 +7,8 @@ let pool;
 
 function getPool() {
   if (!pool) {
-    const connectionString = process.env.POSTGRES_URL;
-    if (!connectionString) throw new Error('POSTGRES_URL belum dikonfigurasi di environment server');
+    const connectionString = process.env.MIFUS_POSTGRES_URL;
+    if (!connectionString) throw new Error('MIFUS_POSTGRES_URL belum dikonfigurasi di environment server');
     const isLocalDb = /localhost|127\.0\.0\.1/.test(connectionString || '');
     pool = new Pool({
       connectionString,

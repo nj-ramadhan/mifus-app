@@ -17,7 +17,7 @@ if (password.length < 12) {
   process.exit(1);
 }
 
-const connectionString = process.env.POSTGRES_URL;
+const connectionString = process.env.MIFUS_POSTGRES_URL;
 const isLocalDb = /localhost|127\.0\.0\.1/.test(connectionString || '');
 const pool = new Pool({
   connectionString,

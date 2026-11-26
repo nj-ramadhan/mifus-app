@@ -8,7 +8,7 @@ if (!process.env.MIFUS_POSTGRES_URL) {
 }
 
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
+  connectionString: process.env.MIFUS_POSTGRES_URL,
   ssl: { rejectUnauthorized: false },
 });
 
