@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import InfusionBottle from '../components/InfusionBottle';
+import FlowRateWidget from '../components/FlowRateWidget';
 
 const STATUS_LABEL = { normal: 'Normal', warning: 'Perhatian', critical: 'Kritis', offline: 'Offline' };
 
@@ -194,11 +195,16 @@ export default function DashboardMifus() {
                     <div className="mifus-progress" aria-label={`Sisa cairan ${device.percentage}%`}><span style={{ width: `${Math.max(0, Math.min(100, device.percentage))}%` }} /></div>
                     <dl>
                       <InfusionBottle
-                        percentage={Number(device.percentage)}
-                        volume={Number(device.current_volume)}
+                        percentage={device.percentage}
+                        volume={device.current_volume}
                         totalCapacity={500}
-                        flowRate={Number(device.flow_rate)}
+                        flowRate={device.flow_rate}
                         status={device.status}
+                        imageSrc="/infus_tabung.png"
+                      />
+                      <FlowRateWidget
+                        flowRate={device.flow_rate}
+                        imageSrc="/infus_selang.png"
                       />
                       <div><dt>Sisa cairan</dt><dd>{device.current_volume} mL ({device.percentage}%)</dd></div>
                       <div><dt>Flow rate</dt><dd>{device.flow_rate} mL/s</dd></div>

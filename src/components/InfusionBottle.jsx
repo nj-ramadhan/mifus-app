@@ -66,53 +66,52 @@ export default function InfusionBottle({
   return (
     <div className="flex items-center gap-6 bg-white p-4 rounded-2xl shadow-sm">
       {/* Visual Tabung Infus Vektor Presisi */}
-      <div className="flex flex-col items-center justify-center flex-shrink-0 relative w-16 h-16">
-        <svg
-          viewBox="0 0 140 180"
-          className="w-28 h-36 drop-shadow-md select-none"
+    <svg
+        viewBox="0 0 280 360"
+        className="w-56 h-72 drop-shadow-md select-none"
         >
-          <defs>
+            <defs>
             {/* Mask rongga dalam tabung agar cairan terpotong rapi mengikuti lekukan */}
             <clipPath id="mifusBottleInnerCavity">
-              <path
+                <path
                 d="M 40,24 
-                   C 40,16 100,16 100,24 
-                   L 100,135 
-                   C 100,146 84,147 84,152 
-                   L 84,162 
-                   L 56,162 
-                   L 56,152 
-                   C 56,147 40,146 40,135 
-                   Z"
-              />
+                    C 40,16 100,16 100,24 
+                    L 100,135 
+                    C 100,146 84,147 84,152 
+                    L 84,162 
+                    L 56,162 
+                    L 56,152 
+                    C 56,147 40,146 40,135 
+                    Z"
+                />
             </clipPath>
 
             {/* Efek gradasi cairan */}
             <linearGradient id="fluidGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.fill} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.fill} stopOpacity="1" />
+                <stop offset="0%" stopColor={colors.fill} stopOpacity="0.8" />
+                <stop offset="100%" stopColor={colors.fill} stopOpacity="1" />
             </linearGradient>
-          </defs>
+            </defs>
 
-          {/* LAYER 1: Background Rongga Kosong */}
-          <path
+            {/* LAYER 1: Background Rongga Kosong */}
+            <path
             d="M 40,24 C 40,16 100,16 100,24 L 100,135 C 100,146 84,147 84,152 L 84,162 L 56,162 L 56,152 C 56,147 40,146 40,135 Z"
             fill="#f8fafc"
-          />
+            />
 
-          {/* LAYER 2: Cairan Dinamis (Dipotong oleh clipPath rongga tabung) */}
-          <g clipPath="url(#mifusBottleInnerCavity)">
+            {/* LAYER 2: Cairan Dinamis (Dipotong oleh clipPath rongga tabung) */}
+            <g clipPath="url(#mifusBottleInnerCavity)">
             <rect
-              x="30"
-              y={liquidY}
-              width="80"
-              height={liquidHeight + 10}
-              fill="url(#fluidGradient)"
-              className="transition-all duration-700 ease-out"
+                x="30"
+                y={liquidY}
+                width="80"
+                height={liquidHeight + 10}
+                fill="url(#fluidGradient)"
+                className="transition-all duration-700 ease-out"
             />
             {/* Permukaan gelombang/meniskus cairan */}
             {clampedPercentage > 0 && clampedPercentage < 100 && (
-              <ellipse
+                <ellipse
                 cx="70"
                 cy={liquidY}
                 rx="30"
@@ -120,41 +119,35 @@ export default function InfusionBottle({
                 fill="#ffffff"
                 opacity="0.4"
                 className="transition-all duration-700 ease-out"
-              />
+                />
             )}
-          </g>
+            </g>
 
-          {/* LAYER 3: Garis Skala Pengukur (Graduation Marks) */}
-          <g stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" opacity="0.8">
+            {/* LAYER 3: Garis Skala Pengukur (Graduation Marks) */}
+            <g stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" opacity="0.8">
             <line x1="42" y1="52" x2="52" y2="52" />
             <line x1="42" y1="80" x2="48" y2="80" />
             <line x1="42" y1="108" x2="52" y2="108" />
             <line x1="42" y1="136" x2="48" y2="136" />
-          </g>
+            </g>
 
-          {/* LAYER 4: Garis Luar (Outline Tabung Asli Mifus) */}
-          <path
+            {/* LAYER 4: Garis Luar (Outline Tabung Asli Mifus) */}
+            <path
             d="M 40,24 
-               C 40,12 100,12 100,24 
-               L 100,135 
-               C 100,148 85,148 85,152 
-               L 85,163 
-               L 55,163 
-               L 55,152 
-               C 55,148 40,148 40,135 
-               Z"
+                C 40,12 100,12 100,24 
+                L 100,135 
+                C 100,148 85,148 85,152 
+                L 85,163 
+                L 55,163 
+                L 55,152 
+                C 55,148 40,148 40,135 
+                Z"
             fill="none"
             stroke="#000000"
             strokeWidth="5"
             strokeLinejoin="round"
-          />
+            />
         </svg>
-
-        {/* Badge Persentase */}
-        <span className={`text-xs font-black px-2.5 py-0.5 mt-1 rounded-full border shadow-sm`}>
-          {clampedPercentage}%
-        </span>
-      </div>
 
       {/* Rincian Parameter Klinis */}
       {showDetails && (
