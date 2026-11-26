@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-dotenv.config({ path: '.env.development.local', override: true });
+dotenv.config({ path: '.env.local', override: true });
 
 export function signToken(user) {
   if (!process.env.JWT_SECRET) {

@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.development.local' });
+dotenv.config({ path: '.env.local', override: true });
 import { Pool } from 'pg';
 
-if (!process.env.POSTGRES_URL) {
-  console.error('POSTGRES_URL tidak ditemukan di .env.development.local');
+if (!process.env.MIFUS_POSTGRES_URL) {
+  console.error('MIFUS_POSTGRES_URL tidak ditemukan di .env.local');
   process.exit(1);
 }
 

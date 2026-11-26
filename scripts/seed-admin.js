@@ -2,10 +2,10 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.development.local' });
+dotenv.config({ path: '.env.local' });
 
 const {
-  POSTGRES_URL,
+  MIFUS_POSTGRES_URL,
   ADMIN_NAME,
   ADMIN_EMAIL,
   ADMIN_PASSWORD,
@@ -14,7 +14,7 @@ const {
 } = process.env;
 
 const required = {
-  POSTGRES_URL,
+  MIFUS_POSTGRES_URL,
   ADMIN_NAME,
   ADMIN_EMAIL,
   ADMIN_PASSWORD,
@@ -35,9 +35,9 @@ if (ADMIN_PASSWORD.length < 12) {
   process.exit(1);
 }
 
-const isLocalDb = /localhost|127\.0\.0\.1/.test(POSTGRES_URL);
+const isLocalDb = /localhost|127\.0\.0\.1/.test(MIFUS_POSTGRES_URL);
 const pool = new Pool({
-  connectionString: POSTGRES_URL,
+  connectionString: MIFUS_POSTGRES_URL,
   ssl: isLocalDb ? false : { rejectUnauthorized: false },
 });
 

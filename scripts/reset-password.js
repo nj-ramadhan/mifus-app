@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.development.local' });
+dotenv.config({ path: '.env.local' });
 
 const email = process.env.RESET_EMAIL;
 const password = process.env.RESET_PASSWORD;

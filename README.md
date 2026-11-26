@@ -27,7 +27,7 @@ Repositori ini berisi aplikasi dashboard klinis **Mifus-App** untuk memantau sis
 ### Menjalankan secara lokal
 
 1. Install dependency dengan `npm install`.
-2. Salin `.env.example` menjadi `.env.development.local`, lalu isi `POSTGRES_URL`,
+2. Salin `.env.example` menjadi `.env.local`, lalu isi `POSTGRES_URL`,
    `JWT_SECRET`, dan `IOT_INGEST_TOKEN` dengan nilai rahasia yang kuat
    (contoh generator: `openssl rand -base64 32`).
 3. Jalankan SQL pada `scripts/schema.sql` di database PostgreSQL. Semua tabel
