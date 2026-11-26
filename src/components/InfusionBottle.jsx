@@ -68,7 +68,7 @@ export default function InfusionBottle({
       {/* Visual Tabung Infus Vektor Presisi */}
     <svg
         viewBox="0 0 280 360"
-        className="w-112 h-144 drop-shadow-md select-none"
+        className="w-full h-full drop-shadow-md select-none"
         >
             <defs>
             {/* Mask rongga dalam tabung agar cairan terpotong rapi mengikuti lekukan */}
