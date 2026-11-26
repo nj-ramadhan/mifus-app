@@ -206,15 +206,6 @@ export default function DashboardMifus() {
                         flowRate={device.flow_rate}
                         imageSrc="/infus_selang.png"
                       />
-                      <img
-                        src='/infus_selang.png'
-                        alt="Visualisasi Selang Infus"
-                        className="relative z-10 w-full h-full object-contain pointer-events-none drop-shadow-sm"
-                        onError={(e) => {
-                          // Fallback elegan jika gambar belum disalin ke folder public
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
                       <div><dt>Sisa cairan</dt><dd>{device.current_volume} mL ({device.percentage}%)</dd></div>
                       <div><dt>Flow rate</dt><dd>{device.flow_rate} mL/s</dd></div>
                       <div><dt>Baterai</dt><dd>{device.battery_level}%</dd></div>

@@ -3,7 +3,7 @@ export default function FlowRateWidget({ flowRate = 0, averageRate = 0 }) {
   const isFlowing = flowRate > 0;
 
   return (
-    <div className="flex items-center gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+    <div className="flex items-center gap-6 bg-white p-4 rounded-2xl shadow-sm">
       {/* Gambar Selang & Drip Chamber */}
       <div className="relative w-16 h-36 flex items-center justify-center flex-shrink-0">
         <img

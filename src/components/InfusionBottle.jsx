@@ -64,7 +64,7 @@ export default function InfusionBottle({
   };
 
   return (
-    <div className="flex items-center gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+    <div className="flex items-center gap-6 bg-white p-4 rounded-2xl shadow-sm">
       {/* Visual Tabung Infus Vektor Presisi */}
       <div className="flex flex-col items-center justify-center flex-shrink-0">
         <svg
@@ -168,13 +168,6 @@ export default function InfusionBottle({
             <span className="text-slate-400 font-medium text-xs">Sisa Volume</span>
             <span className="font-bold text-slate-800">
               {volume} <span className="text-xs font-normal text-slate-400">/ {totalCapacity} mL</span>
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center py-1 border-b border-slate-100">
-            <span className="text-slate-400 font-medium text-xs">Laju Alir</span>
-            <span className="font-bold text-slate-800">
-              {flowRate} <span className="text-xs font-normal text-slate-400">mL/s</span>
             </span>
           </div>
 
