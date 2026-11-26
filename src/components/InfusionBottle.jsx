@@ -10,83 +10,153 @@ export default function InfusionBottle({
   flowRate = 0,
   status = 'normal',
   showDetails = true,
-  imageSrc = '/infus_tabung.png', // Pastikan file berada di folder public/
 }) {
-  // Pastikan batas persentase antara 0% hingga 100%
-  const clampedPercentage = Math.min(Math.max(percentage, 0), 100);
+  // 1. Pastikan nilai persentase berupa angka valid antara 0 - 100
+  const numPercentage = Number(percentage) || 0;
+  const clampedPercentage = Math.min(Math.max(numPercentage, 0), 100);
 
-  // Warna cairan dinamis berdasarkan status triage klinis
-  const getFluidColor = () => {
+  // 2. Warna cairan berdasarkan status klinis Mifus
+  const getFluidColors = () => {
     switch (status) {
       case 'critical':
-        return 'bg-gradient-to-t from-rose-600 to-rose-400';
+        return {
+          fill: '#ef4444',      // Red / Rose
+          glow: 'rgba(239, 68, 68, 0.4)',
+          text: 'text-rose-600',
+          badge: 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse',
+        };
       case 'warning':
-        return 'bg-gradient-to-t from-amber-500 to-amber-300';
+        return {
+          fill: '#f59e0b',      // Amber / Yellow
+          glow: 'rgba(245, 158, 11, 0.4)',
+          text: 'text-amber-600',
+          badge: 'bg-amber-50 text-amber-700 border-amber-200',
+        };
       case 'normal':
       default:
-        // Warna Cyan khas asli Mifus (#00e5ff / sky blue)
-        return 'bg-gradient-to-t from-cyan-500 to-sky-300';
+        return {
+          fill: '#00e5ff',      // Cyan khas asli Mifus
+          glow: 'rgba(0, 229, 255, 0.4)',
+          text: 'text-cyan-600',
+          badge: 'bg-slate-900 text-cyan-400 border-slate-800',
+        };
     }
   };
 
-  // Estimasi waktu habis cairan infus
+  const colors = getFluidColors();
+
+  // 3. Perhitungan geometri koordinat tabung (sesuai infus_tabung.png: 140 x 180)
+  // Dasar rongga cairan: Y = 160, Puncak rongga: Y = 20 (Tinggi total rongga = 140px)
+  const cavityBottomY = 160;
+  const cavityTotalHeight = 140;
+  const liquidHeight = (clampedPercentage / 100) * cavityTotalHeight;
+  const liquidY = cavityBottomY - liquidHeight;
+
+  // 4. Estimasi waktu habis
   const getEstimateTime = () => {
-    if (!flowRate || flowRate <= 0 || !volume || volume <= 0) return 'Tidak terdeteksi';
-    const totalSeconds = volume / flowRate;
+    const numVol = Number(volume) || 0;
+    const numRate = Number(flowRate) || 0;
+    if (numRate <= 0 || numVol <= 0) return 'Terhenti';
+    const totalSeconds = numVol / numRate;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    return hours > 0 ? `${hours}j ${minutes}m` : `${minutes} menit`;
+    return hours > 0 ? `${hours}j ${minutes}m` : `${minutes} mnt`;
   };
 
   return (
     <div className="flex items-center gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-      {/* Container Ilustrasi Tabung */}
-      <div className="relative w-28 h-40 flex items-center justify-center select-none flex-shrink-0">
-        
-        {/* Layer 1: Background Cairan Dinamis (Ditempatkan di dalam rongga tabung) */}
-        <div 
-          className="absolute rounded-t-[18px] rounded-b-[6px] overflow-hidden flex flex-col justify-end"
-          style={{
-            top: '10.5%',
-            bottom: '18%',
-            left: '25.8%',
-            width: '48.4%',
-          }}
+      {/* Visual Tabung Infus Vektor Presisi */}
+      <div className="flex flex-col items-center justify-center flex-shrink-0">
+        <svg
+          viewBox="0 0 140 180"
+          className="w-28 h-36 drop-shadow-md select-none"
         >
-          {/* Level Cairan yang bergerak sesuai persentase */}
-          <div
-            className={`w-full transition-all duration-700 ease-out ${getFluidColor()} relative`}
-            style={{ height: `${clampedPercentage}%` }}
-          >
-            {/* Animasi kilau meniskus permukaan air */}
-            <div className="w-full h-1.5 bg-white/40 absolute top-0 rounded-full animate-pulse"></div>
-          </div>
-        </div>
+          <defs>
+            {/* Mask rongga dalam tabung agar cairan terpotong rapi mengikuti lekukan */}
+            <clipPath id="mifusBottleInnerCavity">
+              <path
+                d="M 40,24 
+                   C 40,16 100,16 100,24 
+                   L 100,135 
+                   C 100,146 84,147 84,152 
+                   L 84,162 
+                   L 56,162 
+                   L 56,152 
+                   C 56,147 40,146 40,135 
+                   Z"
+              />
+            </clipPath>
 
-        {/* Layer 2: Gambar Asli infus_tabung.png (Sebagai Masking / Bingkai Luar) */}
-        <img
-          src={imageSrc}
-          alt="Visualisasi Tabung Infus"
-          className="relative z-10 w-full h-full object-contain pointer-events-none drop-shadow-sm"
-          onError={(e) => {
-            // Fallback elegan jika gambar belum disalin ke folder public
-            e.currentTarget.style.display = 'none';
-          }}
-        />
+            {/* Efek gradasi cairan */}
+            <linearGradient id="fluidGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.fill} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={colors.fill} stopOpacity="1" />
+            </linearGradient>
+          </defs>
 
-        {/* Badge Persentase Melayang di Atas Tabung */}
-        <div className="absolute z-20 bottom-1 flex items-center justify-center">
-          <span className={`text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm border ${
-            status === 'critical' ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse' :
-            status === 'warning' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-            'bg-slate-900 text-cyan-400 border-slate-800'
-          }`}>
-            {clampedPercentage}%
-          </span>
-        </div>
+          {/* LAYER 1: Background Rongga Kosong */}
+          <path
+            d="M 40,24 C 40,16 100,16 100,24 L 100,135 C 100,146 84,147 84,152 L 84,162 L 56,162 L 56,152 C 56,147 40,146 40,135 Z"
+            fill="#f8fafc"
+          />
+
+          {/* LAYER 2: Cairan Dinamis (Dipotong oleh clipPath rongga tabung) */}
+          <g clipPath="url(#mifusBottleInnerCavity)">
+            <rect
+              x="30"
+              y={liquidY}
+              width="80"
+              height={liquidHeight + 10}
+              fill="url(#fluidGradient)"
+              className="transition-all duration-700 ease-out"
+            />
+            {/* Permukaan gelombang/meniskus cairan */}
+            {clampedPercentage > 0 && clampedPercentage < 100 && (
+              <ellipse
+                cx="70"
+                cy={liquidY}
+                rx="30"
+                ry="3"
+                fill="#ffffff"
+                opacity="0.4"
+                className="transition-all duration-700 ease-out"
+              />
+            )}
+          </g>
+
+          {/* LAYER 3: Garis Skala Pengukur (Graduation Marks) */}
+          <g stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round" opacity="0.8">
+            <line x1="42" y1="52" x2="52" y2="52" />
+            <line x1="42" y1="80" x2="48" y2="80" />
+            <line x1="42" y1="108" x2="52" y2="108" />
+            <line x1="42" y1="136" x2="48" y2="136" />
+          </g>
+
+          {/* LAYER 4: Garis Luar (Outline Tabung Asli Mifus) */}
+          <path
+            d="M 40,24 
+               C 40,12 100,12 100,24 
+               L 100,135 
+               C 100,148 85,148 85,152 
+               L 85,163 
+               L 55,163 
+               L 55,152 
+               C 55,148 40,148 40,135 
+               Z"
+            fill="none"
+            stroke="#000000"
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        {/* Badge Persentase */}
+        <span className={`text-xs font-black px-2.5 py-0.5 mt-1 rounded-full border shadow-sm ${colors.badge}`}>
+          {clampedPercentage}%
+        </span>
       </div>
 
-      {/* Rincian Parameter Klinis (Mengikuti format Buku Panduan Mifus) */}
+      {/* Rincian Parameter Klinis */}
       {showDetails && (
         <div className="flex-1 space-y-2 text-sm">
           <div className="flex justify-between items-center py-1 border-b border-slate-100">
@@ -110,9 +180,7 @@ export default function InfusionBottle({
 
           <div className="flex justify-between items-center pt-0.5">
             <span className="text-slate-400 font-medium text-xs">Estimasi Habis</span>
-            <span className={`text-xs font-bold ${
-              status === 'critical' ? 'text-rose-600' : 'text-blue-600'
-            }`}>
+            <span className={`text-xs font-bold ${colors.text}`}>
               {getEstimateTime()}
             </span>
           </div>

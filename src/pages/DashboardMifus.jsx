@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import InfusionBottle from '../components/InfusionBottle';
+import FlowRateWidget from '../components/FlowRateWidget';
 
 const STATUS_LABEL = { normal: 'Normal', warning: 'Perhatian', critical: 'Kritis', offline: 'Offline' };
 
@@ -193,16 +194,18 @@ export default function DashboardMifus() {
                     <p className="mifus-location">{device.hospital_name || 'Rumah sakit'} · {device.room_number || '-'} / {device.bed_number || '-'}</p>
                     <div className="mifus-progress" aria-label={`Sisa cairan ${device.percentage}%`}><span style={{ width: `${Math.max(0, Math.min(100, device.percentage))}%` }} /></div>
                     <dl>
-                      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
-                        <InfusionBottle
-                          percentage={device.percentage}
-                          volume={device.current_volume}
-                          totalCapacity={500}
-                          flowRate={device.flow_rate}
-                          status={device.status}
-                          imageSrc="/infus_tabung.png"
-                        />
-                      </div>
+                      <InfusionBottle
+                        percentage={device.percentage}
+                        volume={device.current_volume}
+                        totalCapacity={500}
+                        flowRate={device.flow_rate}
+                        status={device.status}
+                        imageSrc="/infus_tabung.png"
+                      />
+                      <FlowRateWidget
+                        flowRate={device.flow_rate}
+                        imageSrc="/infus_selang.png"
+                      />
                       <img
                         src='/infus_selang.png'
                         alt="Visualisasi Selang Infus"
