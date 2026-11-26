@@ -48,11 +48,6 @@ function getFinanceDateKey(value) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-const OTHER_FEE_TYPES = [
-  { key: 'sosial', label: 'Dana Sosial' },
-  { key: 'kematian', label: 'Dana Kematian' },
-  { key: 'kompensasi', label: 'Dana Kompensasi' },
-];
 
 function createPaymentForm() {
   const date = new Date();

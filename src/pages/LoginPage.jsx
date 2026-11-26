@@ -1,77 +1,50 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import simdesIcon from '../assets/icon-simdes.png';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  if (user) return <Navigate to="/dashboard" replace />;
+
+  async function handleSubmit(event) {
+    event.preventDefault();
     setError('');
+    setLoading(true);
     try {
-      const user = await login(email, password);
-      if (user.role === 'rw_admin') navigate('/rw');
-      else if (user.role === 'rt_admin') navigate('/rt');
-      else navigate('/warga');
+      await login(email, password);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal login');
+      setError(err.response?.data?.error || 'Gagal login ke MIFUS');
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className="login-screen">
-      <div className="login-shell">
-        <aside className="login-brand-panel">
-          <div className="login-brand-content">
-            <div className="login-logo"><img src={simdesIcon} alt="SIMDES" /></div>
-            <div>
-              <h1>SIMDES</h1>
-              <p>Sistem Informasi Masyarakat Desa</p>
-            </div>
+    <main className="mifus-login">
+      <section className="mifus-login-card" aria-label="Login MIFUS">
+        <div className="mifus-login-brand">
+          <span className="mifus-mark" aria-hidden="true">M</span>
+          <div>
+            <h1>MIFUS Cloud</h1>
+            <p>Smart Infusion Monitoring</p>
           </div>
-          <div className="login-highlight">
-            <span className="login-tag">Dashboard RW/RT</span>
-            <p>Kelola data warga, laporan, aset, Iuran, dan kegiatan perangkat lingkungan secara terintegrasi.</p>
-          </div>
-        </aside>
-
-        <section className="login-card-wrap">
-          <form onSubmit={handleSubmit} className="login-card">
-            <div className="login-header">
-              <span className="login-kicker">Portal Login</span>
-              <h2>Selamat Datang</h2>
-              <button type="button" className="back-to-public" onClick={() => navigate('/')}>Kembali ke Transparansi</button>
-            </div>
-            {error && <p className="login-error">{error}</p>}
-            <div className="field-group">
-              <label className="form-label" htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email" placeholder="nama@domain.com" value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="form-control"
-              />
-            </div>
-            <div className="field-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password" placeholder="••••••••" value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="form-control"
-              />
-            </div>
-            <button type="submit" className="login-button">
-              Masuk ke Dashboard
-            </button>
-          </form>
-        </section>
-      </div>
-    </div>
+        </div>
+        <form onSubmit={handleSubmit} className="mifus-login-form">
+          {error && <p className="mifus-error" role="alert">{error}</p>}
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <button type="submit" disabled={loading}>{loading ? 'Memeriksa...' : 'Masuk'}</button>
+        </form>
+      </section>
+    </main>
   );
 }

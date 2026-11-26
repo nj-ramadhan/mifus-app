@@ -1,200 +1,65 @@
--- =============================================
--- SKEMA DATABASE simdes (PostgreSQL / Neon)
--- Jalankan file ini di Neon SQL Editor (dashboard) sekali saja
--- untuk membuat semua tabel.
--- =============================================
-
-CREATE TABLE IF NOT EXISTS rw (
-  id_rw INTEGER PRIMARY KEY,
-  nama_rw TEXT,
-  alamat TEXT,
-  admin_rw_user_id TEXT
+-- 1. Tabel Rumah Sakit
+CREATE TABLE hospitals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(150) NOT NULL,
+    address TEXT NOT NULL,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS rt (
-  id_rt INTEGER PRIMARY KEY,
-  id_rw INTEGER REFERENCES rw(id_rw),
-  nama_rt TEXT,
-  admin_rt_user_id TEXT
+-- 2. Tabel Pengguna (Manager, Perawat, Pasien)
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('manager', 'nurse', 'patient')) DEFAULT 'nurse',
+    hospital_id UUID REFERENCES hospitals(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX users_email_case_insensitive_unique ON users (LOWER(email));
+
+-- 3. Tabel Perangkat IoT Mifus
+CREATE TABLE devices (
+    id VARCHAR(50) PRIMARY KEY, -- e.g. 'MF001', 'MF002'
+    hospital_id UUID REFERENCES hospitals(id) ON DELETE SET NULL,
+    room_number VARCHAR(50),
+    bed_number VARCHAR(50),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS users (
-  id_user TEXT PRIMARY KEY,
-  nama TEXT,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('rw_admin','rt_admin','warga')),
-  id_rt INTEGER,
-  id_rw INTEGER,
-  status TEXT DEFAULT 'aktif',
-  created_at TIMESTAMPTZ DEFAULT now()
+-- 4. Tabel Pasien
+CREATE TABLE patients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    medical_record_number VARCHAR(50) UNIQUE NOT NULL,
+    diagnosis TEXT,
+    hospital_id UUID REFERENCES hospitals(id) ON DELETE CASCADE,
+    device_id VARCHAR(50) UNIQUE REFERENCES devices(id) ON DELETE SET NULL,
+    total_volume_prescribed INT DEFAULT 500, -- mL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- ==== Data Sosial Kependudukan ====
-
-CREATE TABLE IF NOT EXISTS sensus (
-  id_warga TEXT PRIMARY KEY,
-  id_rt INTEGER,
-  nik TEXT,
-  nama TEXT,
-  jenis_kelamin TEXT,
-  tgl_lahir DATE,
-  pekerjaan TEXT,
-  status_kk TEXT,
-  no_kk TEXT,
-  alamat TEXT,
-  no_hp TEXT,
-  foto_url TEXT,
-  keterangan_khusus TEXT
+-- 5. Tabel Telemetri Terbaru (Hanya menyimpan data state terakhir agar efisien)
+CREATE TABLE device_telemetry (
+    device_id VARCHAR(50) PRIMARY KEY REFERENCES devices(id) ON DELETE CASCADE,
+    current_volume INT NOT NULL,     -- mL sisa
+    flow_rate DOUBLE PRECISION NOT NULL, -- mL/s
+    percentage INT NOT NULL,         -- 0 - 100%
+    battery_level INT DEFAULT 100,
+    status VARCHAR(20) DEFAULT 'normal', -- 'normal', 'warning', 'critical'
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE sensus ADD COLUMN IF NOT EXISTS id_rw INTEGER;
-ALTER TABLE sensus ADD COLUMN IF NOT EXISTS keterangan_khusus TEXT;
-
-CREATE TABLE IF NOT EXISTS jompo (
-  id TEXT REFERENCES sensus(id_warga),
-  id_warga TEXT,
-  id_rt INTEGER,
-  usia INT,
-  kondisi_kesehatan TEXT,
-  penanggung_jawab TEXT,
-  kebutuhan_khusus TEXT
-);
-
-CREATE TABLE IF NOT EXISTS anak (
-  id TEXT REFERENCES sensus(id_warga),
-  id_warga TEXT,
-  id_rt INTEGER,
-  tgl_lahir DATE,
-  sekolah TEXT,
-  jenjang TEXT,
-  nama_ortu TEXT
-);
-
-CREATE TABLE IF NOT EXISTS inklusi (
-  id TEXT REFERENCES sensus(id_warga),
-  id_warga TEXT,
-  id_rt INTEGER,
-  jenis_disabilitas TEXT,
-  kebutuhan_bantuan TEXT,
-  alat_bantu TEXT
-);
-
--- ==== Data Lingkungan & Aset ====
-
-CREATE TABLE IF NOT EXISTS perusahaan (
-  id TEXT PRIMARY KEY,
-  id_rt INTEGER,
-  nama_usaha TEXT,
-  jenis_usaha TEXT,
-  pemilik TEXT,
-  alamat TEXT,
-  status_izin TEXT
-);
-
-CREATE TABLE IF NOT EXISTS lingkungan (
-  id TEXT PRIMARY KEY,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  kategori TEXT,
-  lokasi TEXT,
-  kondisi TEXT,
-  tgl_laporan DATE,
-  aduan_id TEXT,
-  nama_pelapor TEXT,
-  no_hp_pelapor TEXT
-);
-
-CREATE TABLE IF NOT EXISTS infrastruktur (
-  id TEXT PRIMARY KEY,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  jenis TEXT,
-  lokasi TEXT,
-  kondisi TEXT,
-  tahun_bangun INT,
-  aduan_id TEXT,
-  nama_pelapor TEXT,
-  no_hp_pelapor TEXT
-);
-
-CREATE TABLE IF NOT EXISTS aset (
-  id TEXT PRIMARY KEY,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  nama_aset TEXT,
-  kategori TEXT,
-  jumlah INT,
-  kondisi TEXT,
-  lokasi_simpan TEXT,
-  nilai_perolehan NUMERIC,
-  aduan_id TEXT,
-  nama_pelapor TEXT,
-  no_hp_pelapor TEXT
-);
-
--- ==== Laporan Kegiatan dan Dokumentasi ====
-
-CREATE TABLE IF NOT EXISTS kegiatan (
-  id TEXT PRIMARY KEY,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  judul TEXT NOT NULL,
-  tanggal DATE NOT NULL,
-  lokasi TEXT,
-  deskripsi TEXT NOT NULL,
-  dokumentasi JSONB NOT NULL DEFAULT '[]'::jsonb,
-  created_by TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- ==== Modul Keuangan (6 jenis, struktur seragam) ====
--- Nama tabel HARUS persis: keuangan_global, keuangan_sampah, keuangan_keamanan,
--- keuangan_danasosial, keuangan_danakematian, keuangan_kompensasi
--- (mengikuti hasil lowercase dari SHEET_MAP di api/keuangan/[jenis]/index.js)
-
-CREATE TABLE IF NOT EXISTS keuangan_global (
-  id TEXT PRIMARY KEY,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  tanggal DATE,
-  tipe TEXT CHECK (tipe IN ('masuk','keluar')),
-  kategori TEXT,
-  jumlah NUMERIC,
-  keterangan TEXT,
-  bukti_url TEXT,
-  dicatat_oleh TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS keuangan_sampah (LIKE keuangan_global INCLUDING ALL);
-CREATE TABLE IF NOT EXISTS keuangan_keamanan (LIKE keuangan_global INCLUDING ALL);
-CREATE TABLE IF NOT EXISTS keuangan_danasosial (LIKE keuangan_global INCLUDING ALL);
-CREATE TABLE IF NOT EXISTS keuangan_danakematian (LIKE keuangan_global INCLUDING ALL);
-CREATE TABLE IF NOT EXISTS keuangan_kompensasi (LIKE keuangan_global INCLUDING ALL);
-
-ALTER TABLE keuangan_global ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_global ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-ALTER TABLE keuangan_sampah ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_sampah ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-ALTER TABLE keuangan_keamanan ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_keamanan ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-ALTER TABLE keuangan_danasosial ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_danasosial ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-ALTER TABLE keuangan_danakematian ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_danakematian ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-ALTER TABLE keuangan_kompensasi ADD COLUMN IF NOT EXISTS id_warga TEXT;
-ALTER TABLE keuangan_kompensasi ADD COLUMN IF NOT EXISTS nama_warga TEXT;
-
-CREATE TABLE IF NOT EXISTS aduan (
-  id TEXT PRIMARY KEY,
-  nama TEXT NOT NULL,
-  no_hp TEXT,
-  kategori TEXT NOT NULL,
-  id_rw INTEGER,
-  id_rt INTEGER,
-  lokasi TEXT NOT NULL,
-  deskripsi TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'baru',
-  created_at TIMESTAMPTZ DEFAULT now()
+-- 6. Tabel Log Kejadian Alarm / Kendala Infus
+CREATE TABLE alarm_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    device_id VARCHAR(50) REFERENCES devices(id) ON DELETE CASCADE,
+    alarm_type VARCHAR(50) NOT NULL, -- 'OCCLUSION', 'EMPTY_BAG', 'LOW_BATTERY'
+    message TEXT NOT NULL,
+    is_resolved BOOLEAN DEFAULT false,
+    triggered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP WITH TIME ZONE
 );

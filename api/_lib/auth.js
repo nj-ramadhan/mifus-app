@@ -8,7 +8,11 @@ export function signToken(user) {
     throw new AuthError('JWT_SECRET belum dikonfigurasi di environment server', 500);
   }
   return jwt.sign(
-    { id: user.id_user, role: user.role, id_rt: user.id_rt, id_rw: user.id_rw },
+    {
+      id: user.id || user.id_user,
+      role: user.role,
+      hospital_id: user.hospital_id || null,
+    },
     process.env.JWT_SECRET,
     { expiresIn: '8h' }
   );
@@ -35,27 +39,27 @@ export class AuthError extends Error {
   }
 }
 
-// Guard: hanya role tertentu yang boleh lanjut
 export function requireRole(user, allowedRoles) {
   if (!allowedRoles.includes(user.role)) {
     throw new AuthError('Anda tidak punya akses untuk aksi ini', 403);
   }
 }
 
-// Guard: pastikan resource yang diakses ada dalam scope RT/RW milik user
-export function assertScope(user, targetIdRt, targetIdRw) {
-  const normalizedRt = targetIdRt === '' || targetIdRt == null ? null : Number(targetIdRt);
-  const normalizedRw = targetIdRw === '' || targetIdRw == null ? null : Number(targetIdRw);
-  if (user.role === 'rw_admin') {
-    if (user.id_rw != null && normalizedRw != null && normalizedRw !== Number(user.id_rw)) {
-      throw new AuthError('Di luar cakupan RW Anda', 403);
-    }
-    return;
+export function assertHospitalScope(user, hospitalId) {
+  if (
+    ['manager', 'nurse'].includes(user.role) &&
+    (!user.hospital_id || !hospitalId || String(user.hospital_id) !== String(hospitalId))
+  ) {
+    throw new AuthError('Di luar cakupan rumah sakit Anda', 403);
   }
-  if (user.role === 'rt_admin' || user.role === 'warga') {
-    if (user.id_rt != null && normalizedRt != null && normalizedRt !== Number(user.id_rt)) {
-      throw new AuthError('Di luar cakupan RT Anda', 403);
-    }
-    return;
+}
+
+export function assertScope(user, targetIdRt, targetIdRw) {
+  if (targetIdRt == null && targetIdRw == null) return;
+  if (user.role === 'rw_admin' && user.id_rw != null && targetIdRw != null && String(targetIdRw) !== String(user.id_rw)) {
+    throw new AuthError('Di luar cakupan RW Anda', 403);
+  }
+  if (['rt_admin', 'warga'].includes(user.role) && user.id_rt != null && targetIdRt != null && String(targetIdRt) !== String(user.id_rt)) {
+    throw new AuthError('Di luar cakupan RT Anda', 403);
   }
 }

@@ -8,6 +8,7 @@ let pool;
 function getPool() {
   if (!pool) {
     const connectionString = process.env.POSTGRES_URL;
+    if (!connectionString) throw new Error('POSTGRES_URL belum dikonfigurasi di environment server');
     const isLocalDb = /localhost|127\.0\.0\.1/.test(connectionString || '');
     pool = new Pool({
       connectionString,
@@ -17,22 +18,21 @@ function getPool() {
   return pool;
 }
 
-function toTableName(name) {
-  return name.toLowerCase();
+export function query(text, params = []) {
+  return getPool().query(text, params);
 }
 
 export async function getRows(tableName, filterFn = null) {
-  const { rows } = await getPool().query(`SELECT * FROM ${toTableName(tableName)}`);
+  const { rows } = await getPool().query(`SELECT * FROM ${tableName.toLowerCase()}`);
   return filterFn ? rows.filter(filterFn) : rows;
 }
 
 export async function addRow(tableName, rowData) {
   const keys = Object.keys(rowData);
   const values = Object.values(rowData);
-  const columns = keys.join(', ');
   const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
   const { rows } = await getPool().query(
-    `INSERT INTO ${toTableName(tableName)} (${columns}) VALUES (${placeholders}) RETURNING *`,
+    `INSERT INTO ${tableName.toLowerCase()} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`,
     values
   );
   return rows[0];
@@ -47,7 +47,7 @@ export async function addRows(batch) {
       const keys = Object.keys(rowData);
       const placeholders = keys.map((_, index) => `$${index + 1}`).join(', ');
       const { rows } = await client.query(
-        `INSERT INTO ${toTableName(tableName)} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`,
+        `INSERT INTO ${tableName.toLowerCase()} (${keys.join(', ')}) VALUES (${placeholders}) RETURNING *`,
         Object.values(rowData)
       );
       createdRows.push(rows[0]);
@@ -67,7 +67,7 @@ export async function updateRowById(tableName, idField, idValue, newData) {
   if (keys.length === 0) throw new Error('Tidak ada data untuk diupdate');
   const setClause = keys.map((key, index) => `${key} = $${index + 1}`).join(', ');
   const { rows } = await getPool().query(
-    `UPDATE ${toTableName(tableName)} SET ${setClause} WHERE ${idField} = $${keys.length + 1} RETURNING *`,
+    `UPDATE ${tableName.toLowerCase()} SET ${setClause} WHERE ${idField} = $${keys.length + 1} RETURNING *`,
     [...Object.values(newData), idValue]
   );
   if (rows.length === 0) throw new Error('Data tidak ditemukan');
@@ -76,7 +76,7 @@ export async function updateRowById(tableName, idField, idValue, newData) {
 
 export async function deleteRowById(tableName, idField, idValue) {
   const result = await getPool().query(
-    `DELETE FROM ${toTableName(tableName)} WHERE ${idField} = $1`,
+    `DELETE FROM ${tableName.toLowerCase()} WHERE ${idField} = $1`,
     [idValue]
   );
   if (result.rowCount === 0) throw new Error('Data tidak ditemukan');

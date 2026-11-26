@@ -1,56 +1,86 @@
-// Script sekali-jalan untuk membuat akun rw_admin PERTAMA.
-// Ini perlu karena api/auth/register.js sengaja mensyaratkan sudah ada
-// admin yang login (supaya tidak sembarang orang bisa daftar sendiri) —
-// jadi untuk akun paling pertama, harus di-insert langsung ke database.
-//
-// CARA PAKAI:
-//   1. Pastikan .env.local sudah berisi POSTGRES_URL (hasil `vercel env pull .env.local`)
-//   2. npm install pg bcryptjs dotenv   (kalau belum ada)
-//   3. GANTI password di bawah sebelum menjalankan
-//   4. node scripts/seed-admin.js
-
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-const connectionString = process.env.POSTGRES_URL;
-const isLocalDb = /localhost|127\.0\.0\.1/.test(connectionString);
+const {
+  POSTGRES_URL,
+  ADMIN_NAME,
+  ADMIN_EMAIL,
+  ADMIN_PASSWORD,
+  HOSPITAL_NAME,
+  HOSPITAL_ADDRESS,
+} = process.env;
 
+const required = {
+  POSTGRES_URL,
+  ADMIN_NAME,
+  ADMIN_EMAIL,
+  ADMIN_PASSWORD,
+  HOSPITAL_NAME,
+  HOSPITAL_ADDRESS,
+};
+const missing = Object.entries(required)
+  .filter(([, value]) => !value?.trim())
+  .map(([name]) => name);
+
+if (missing.length > 0) {
+  console.error(`Konfigurasi wajib belum diisi: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
+if (ADMIN_PASSWORD.length < 12) {
+  console.error('ADMIN_PASSWORD harus memiliki minimal 12 karakter.');
+  process.exit(1);
+}
+
+const isLocalDb = /localhost|127\.0\.0\.1/.test(POSTGRES_URL);
 const pool = new Pool({
-  connectionString,
+  connectionString: POSTGRES_URL,
   ssl: isLocalDb ? false : { rejectUnauthorized: false },
 });
 
 async function main() {
-  const EMAIL = 'admin@simdes.local';   // <-- ganti sesuai keinginan
-  const PASSWORD = 'admin'; // <-- WAJIB ganti sebelum run
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const idRw = 1;
-  const idRt = 1;
-  const idUser = randomUUID();
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+    const existingUser = await client.query(
+      'SELECT 1 FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      [ADMIN_EMAIL.trim()]
+    );
+    if (existingUser.rowCount > 0) {
+      throw new Error('Email admin sudah terdaftar.');
+    }
 
-  await pool.query('INSERT INTO rw (id_rw, nama_rw) VALUES ($1, $2)', [idRw, 'RW Contoh']);
-  await pool.query('INSERT INTO rt (id_rt, id_rw, nama_rt) VALUES ($1, $2, $3)', [idRt, idRw, 'RT 01']);
-  await pool.query(
-    `INSERT INTO users (id_user, nama, email, password_hash, role, id_rt, id_rw, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [idUser, 'Admin RW', EMAIL, passwordHash, 'rw_admin', null, idRw, 'aktif']
-  );
+    const hospital = await client.query(
+      'INSERT INTO hospitals (name, address) VALUES ($1, $2) RETURNING id',
+      [HOSPITAL_NAME.trim(), HOSPITAL_ADDRESS.trim()]
+    );
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
 
-  console.log('✅ Berhasil membuat akun admin pertama:');
-  console.log('   Email   :', EMAIL);
-  console.log('   Password:', PASSWORD);
-  console.log('   id_rw   :', idRw, '  id_rt (contoh):', idRt);
-  console.log('\nSilakan login dengan akun ini, lalu buat akun rt_admin/warga lain lewat fitur register di aplikasi.');
+    await client.query(
+      `INSERT INTO users (name, email, password_hash, role, hospital_id)
+       VALUES ($1, $2, $3, 'manager', $4)`,
+      [ADMIN_NAME.trim(), ADMIN_EMAIL.trim().toLowerCase(), passwordHash, hospital.rows[0].id]
+    );
 
-  await pool.end();
+    await client.query('COMMIT');
+    console.log(`Akun manager dan rumah sakit berhasil dibuat (ID rumah sakit: ${hospital.rows[0].id}).`);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
-main().catch((err) => {
-  console.error('❌ Gagal membuat akun admin:', err.message);
-  process.exit(1);
-});
+try {
+  await main();
+} catch (error) {
+  console.error('Gagal membuat akun awal Mifus:', error.message);
+  process.exitCode = 1;
+} finally {
+  await pool.end();
+}

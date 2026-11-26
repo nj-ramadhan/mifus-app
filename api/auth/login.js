@@ -1,24 +1,44 @@
 import bcrypt from 'bcryptjs';
-import { getRows } from '../_lib/sheets.js';
+import { query } from '../_lib/sheets.js';
 import { signToken } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method tidak diizinkan' });
 
-  const { email, password } = req.body;
-  try {
-    const users = await getRows('Users', u => u.email === email);
-    if (users.length === 0) return res.status(401).json({ error: 'Email atau password salah' });
+  const { email, password } = req.body || {};
+  if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
+    return res.status(400).json({ error: 'Email dan password wajib diisi' });
+  }
 
-    const user = users[0];
+  try {
+    const result = await query(
+      'SELECT id, name, email, password_hash, role, hospital_id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      [email.trim()]
+    );
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Email atau password salah' });
+
+    const user = result.rows[0];
+    if (!['manager', 'nurse'].includes(user.role)) {
+      return res.status(403).json({ error: 'Akses portal pasien belum tersedia' });
+    }
+
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Email atau password salah' });
 
     const token = signToken(user);
-    const safeUser = { ...user };
-    delete safeUser.password_hash;
-    return res.status(200).json({ token, user: safeUser });
+    return res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        hospital_id: user.hospital_id,
+      },
+    });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(err.status || 500).json({
+      error: err.status ? err.message : 'Gagal memproses login',
+    });
   }
 }
