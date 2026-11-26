@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 
-dotenv.config({ path: '.env.local', override: true });
+dotenv.config({ path: '.env.development.local', override: true });
 
 let pool;
 

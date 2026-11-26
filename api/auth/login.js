@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       },
     });
   } catch (err) {
+    console.error('Gagal memproses login MIFUS:', err);
     return res.status(err.status || 500).json({
       error: err.status ? err.message : 'Gagal memproses login',
     });
