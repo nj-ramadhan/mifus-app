@@ -149,16 +149,11 @@ export default function InfusionBottle({
             strokeLinejoin="round"
           />
         </svg>
-
-        {/* Badge Persentase */}
-        <span className={`text-xs font-black px-2.5 py-0.5 mt-1 rounded-full border shadow-sm ${colors.badge}`}>
-          {clampedPercentage}%
-        </span>
       </div>
 
       {/* Rincian Parameter Klinis */}
       {showDetails && (
-        <div className="flex flex-col items-center justify-center flex-shrink-0">
+        <div className="flex flex-col items-left justify-left flex-shrink-0">
             <div className="flex-1 space-y-2">
                 <div className="flex justify-between items-center py-1 border-b border-slate-100">
                     <span className="text-slate-400 font-medium text-xs">Isi Labu</span>

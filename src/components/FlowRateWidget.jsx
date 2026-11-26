@@ -18,22 +18,20 @@ export default function FlowRateWidget({ flowRate = 0, averageRate = 0 }) {
       </div>
 
       {/* Rincian Parameter */}
-      <div className="flex flex-col items-center justify-center flex-shrink-0">
-        <div className="flex-1 space-y-2 text-sm">
-            <div className="flex justify-between items-center py-1 border-b border-slate-100">
+      <div className="flex flex-col items-left justify-left flex-shrink-0">
+        <div className="flex-1 space-y-2">
             <span className="text-slate-400 font-medium text-xs">Flow Rate</span>
             <span className="font-extrabold text-slate-800 text-base">{flowRate} <span className="text-xs font-normal text-slate-400">mL/s</span></span>
-            </div>
-            <div className="flex justify-between items-center py-1 border-b border-slate-100">
+        </div>
+        <div className="flex-1 space-y-2">
             <span className="text-slate-400 font-medium text-xs">Rata-rata</span>
             <span className="font-bold text-slate-700">{averageRate || flowRate} <span className="text-xs font-normal text-slate-400">mL/s</span></span>
-            </div>
-            <div className="flex justify-between items-center pt-0.5">
+        </div>
+        <div className="flex-1 space-y-2">
             <span className="text-slate-400 font-medium text-xs">Status Aliran</span>
             <span className={`text-xs font-bold ${isFlowing ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {isFlowing ? 'Mengalir Normal' : 'Mampet / Terhenti'}
             </span>
-            </div>
         </div>
       </div>
     </div>
