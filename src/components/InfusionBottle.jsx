@@ -66,7 +66,7 @@ export default function InfusionBottle({
   return (
     <div className="flex items-center gap-6 bg-white p-4 rounded-2xl shadow-sm">
       {/* Visual Tabung Infus Vektor Presisi */}
-      <div className="flex flex-col items-center justify-center flex-shrink-0">
+      <div className="flex flex-col items-center justify-center flex-shrink-0 relative w-16 h-16">
         <svg
           viewBox="0 0 140 180"
           className="w-28 h-36 drop-shadow-md select-none"
